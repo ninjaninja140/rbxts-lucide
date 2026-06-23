@@ -1,6 +1,6 @@
 {
 	"name": "@nrbx/lucide",
-	"version": "1.0.3",
+	"version": "1.0.4",
 	"main": "out/init.luau",
 	"scripts": {
 		"generate-pngs": "tsx scripts/generate-pngs.ts lucide/icons img",
