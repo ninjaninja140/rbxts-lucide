@@ -551,7 +551,6 @@ __metadata:
     "@rbxts/types": "npm:^1.0.925"
     axios: "npm:^1.18.1"
     dotenv: "npm:^17.4.2"
-    exiftool-vendored: "npm:^36.0.0"
     form-data: "npm:^4.0.6"
     roblox-ts: "npm:^3.0.0"
     sharp: "npm:^0.35.2"
@@ -562,13 +561,6 @@ __metadata:
     "@rbxts/react": "*"
   languageName: unknown
   linkType: soft
-
-"@photostructure/tz-lookup@npm:^11.5.0":
-  version: 11.5.0
-  resolution: "@photostructure/tz-lookup@npm:11.5.0"
-  checksum: 10c0/6faa7d15a52407be9818bacdce2fea652362577c71cd323f4c70aa5f4937fc29098effb18088c31caeeaefde5133a69e8f5b7337a485e7c4d329c4c6eb891988
-  languageName: node
-  linkType: hard
 
 "@rbxts-js/boolean@npm:^1.2.3-ts.1":
   version: 1.2.3-ts.1
@@ -758,13 +750,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/luxon@npm:^3.7.1":
-  version: 3.7.2
-  resolution: "@types/luxon@npm:3.7.2"
-  checksum: 10c0/c29fd286d0804221b14b3380dd9b290390c188a0df67fa770ced16994e637ab62de89425daf4de82150ea44b9bbbbb9537e4c85677d381d98bec5afcf53f0b5a
-  languageName: node
-  linkType: hard
-
 "abbrev@npm:^5.0.0":
   version: 5.0.0
   resolution: "abbrev@npm:5.0.0"
@@ -849,13 +834,6 @@ __metadata:
     https-proxy-agent: "npm:^5.0.1"
     proxy-from-env: "npm:^2.1.0"
   checksum: 10c0/9d9378a3af0d0ad730a52ad9d15ec7201f3926ad6e7e8bbffc5ae21ca2835ad11d1d9598698f5dd9718917486039f55ea1d7dc23d8e44fa827a55cc3262c02fc
-  languageName: node
-  linkType: hard
-
-"batch-cluster@npm:^18.0.0":
-  version: 18.0.0
-  resolution: "batch-cluster@npm:18.0.0"
-  checksum: 10c0/441176381652d1a83bb44ee60d7591fe63a30eef0e7bee3636e2e1529a2502f8179bcf3b421148afe9c0492e8f0ccc363c3195c95c13ace4dad34ea71b2e3cd6
   languageName: node
   linkType: hard
 
@@ -1244,42 +1222,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"exiftool-vendored.exe@npm:13.59.0":
-  version: 13.59.0
-  resolution: "exiftool-vendored.exe@npm:13.59.0"
-  conditions: os=win32
-  languageName: node
-  linkType: hard
-
-"exiftool-vendored.pl@npm:13.59.0":
-  version: 13.59.0
-  resolution: "exiftool-vendored.pl@npm:13.59.0"
-  bin:
-    exiftool: bin/exiftool
-  conditions: "!os=win32"
-  languageName: node
-  linkType: hard
-
-"exiftool-vendored@npm:^36.0.0":
-  version: 36.0.0
-  resolution: "exiftool-vendored@npm:36.0.0"
-  dependencies:
-    "@photostructure/tz-lookup": "npm:^11.5.0"
-    "@types/luxon": "npm:^3.7.1"
-    batch-cluster: "npm:^18.0.0"
-    exiftool-vendored.exe: "npm:13.59.0"
-    exiftool-vendored.pl: "npm:13.59.0"
-    he: "npm:^1.2.0"
-    luxon: "npm:^3.7.2"
-  dependenciesMeta:
-    exiftool-vendored.exe:
-      optional: true
-    exiftool-vendored.pl:
-      optional: true
-  checksum: 10c0/f8570f534b1e5f4dc9f90d754fe41c3ba9bae820025182e7573bb454d5cfb21309b5efd4252faebe05282a6c5a3e22fdf2a65d55ed897c13527b378cf4d3efcd
-  languageName: node
-  linkType: hard
-
 "exponential-backoff@npm:^3.1.1":
   version: 3.1.3
   resolution: "exponential-backoff@npm:3.1.3"
@@ -1475,15 +1417,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"he@npm:^1.2.0":
-  version: 1.2.0
-  resolution: "he@npm:1.2.0"
-  bin:
-    he: bin/he
-  checksum: 10c0/a27d478befe3c8192f006cdd0639a66798979dfa6e2125c6ac582a19a5ebfec62ad83e8382e6036170d873f46e4536a7e795bf8b95bf7c247f4cc0825ccc8c17
-  languageName: node
-  linkType: hard
-
 "https-proxy-agent@npm:^5.0.1":
   version: 5.0.1
   resolution: "https-proxy-agent@npm:5.0.1"
@@ -1573,13 +1506,6 @@ __metadata:
   version: 4.1.5
   resolution: "kleur@npm:4.1.5"
   checksum: 10c0/e9de6cb49657b6fa70ba2d1448fd3d691a5c4370d8f7bbf1c2f64c24d461270f2117e1b0afe8cb3114f13bbd8e51de158c2a224953960331904e636a5e4c0f2a
-  languageName: node
-  linkType: hard
-
-"luxon@npm:^3.7.2":
-  version: 3.7.2
-  resolution: "luxon@npm:3.7.2"
-  checksum: 10c0/ed8f0f637826c08c343a29dd478b00628be93bba6f068417b1d8896b61cb61c6deacbe1df1e057dbd9298334044afa150f9aaabbeb3181418ac8520acfdc2ae2
   languageName: node
   linkType: hard
 

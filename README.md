@@ -4,6 +4,8 @@
 
 A roblox-ts package that brings [Lucide](https://lucide.dev) Roblox. Over **1,700 icons** available as typed React components, with support for dynamic lookup, icon combining, and full Roblox ImageLabel props.
 
+> **DISCLAIMER**: This package does not publish the icons following icons and icon tags due to Roblox trust and moderation TOS: `cannabis`, `cannabis-off`, `bomb`, `qr-code`, `scan-qr-code`, `alcohol`, `brewery`, `beer`, `cannabis`, `bomb`, `explosive`, `smoking`
+
 ## 📦 Installation
 
 ```bash

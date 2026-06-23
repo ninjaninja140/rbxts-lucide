@@ -71,6 +71,7 @@ jobs:
         env:
           ROBLOX_KEY: ${{ secrets.ROBLOX_KEY }}
           ROBLOX_USER_ID: ${{ secrets.ROBLOX_USER_ID }}
+          ROBLOX_WEBHOOK_UPLOAD_ID: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: yarn upload-pngs
 
       - name: Generate React icon components
