@@ -1,0 +1,111 @@
+name: Update Lucide Icons
+
+on:
+  schedule:
+    # Runs every day at 00:00 UTC
+    - cron: "0 0 * * *"
+  workflow_dispatch:
+    # Allows manual trigger from the Actions tab
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  update-icons:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository with submodules
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Record current lucide submodule ref
+        id: before
+        run: |
+          cd lucide
+          echo "ref=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          cd ..
+
+      - name: Sync lucide submodule to latest
+        run: |
+          git submodule update --init --remote lucide
+          echo "Synced lucide submodule to latest."
+
+      - name: Record new lucide submodule ref
+        id: after
+        run: |
+          cd lucide
+          echo "ref=$(git rev-parse HEAD)" >> $GITHUB_OUTPUT
+          cd ..
+
+      - name: Check for icon changes
+        id: check
+        run: |
+          if [ "${{ steps.before.outputs.ref }}" != "${{ steps.after.outputs.ref }}" ]; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "✅ Lucide submodule has new commits. Proceeding with update."
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "⏭️ No changes in lucide submodule. Skipping update."
+          fi
+
+      - name: Generate PNGs from SVGs
+        if: steps.check.outputs.changed == 'true'
+        run: yarn generate-pngs
+
+      - name: Upload new PNGs to Roblox
+        if: steps.check.outputs.changed == 'true'
+        env:
+          ROBLOX_KEY: ${{ secrets.ROBLOX_KEY }}
+          ROBLOX_USER_ID: ${{ secrets.ROBLOX_USER_ID }}
+        run: yarn upload-pngs
+
+      - name: Generate React icon components
+        if: steps.check.outputs.changed == 'true'
+        run: yarn generate-icons
+
+      - name: Bump patch version
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          npm version patch --no-git-tag-version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Bumped version to $NEW_VERSION"
+        id: version
+
+      - name: Build roblox-ts
+        if: steps.check.outputs.changed == 'true'
+        run: yarn build
+
+      - name: Publish to npm
+        if: steps.check.outputs.changed == 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
+          npm publish --access public
+        continue-on-error: true
+
+      - name: Commit and push changes
+        if: steps.check.outputs.changed == 'true'
+        run: |
+          git add lucide src/icons.json src/icons/ package.json
+          git commit -m "chore: update lucide icons to latest and bump to v${{ steps.version.outputs.new_version }}"
+          git push origin HEAD
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

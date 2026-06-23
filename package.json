@@ -1,0 +1,51 @@
+{
+	"name": "@nrbx/lucide",
+	"version": "1.0.0",
+	"main": "out/init.luau",
+	"scripts": {
+		"generate-pngs": "tsx scripts/generate-pngs.ts lucide/icons img",
+		"upload-pngs": "tsx scripts/upload-pngs.ts",
+		"generate-icons": "tsx scripts/generate-icons.ts",
+		"build": "rbxtsc",
+		"watch": "rbxtsc -w",
+		"prebuild": "tsx scripts/generate-icons.ts",
+		"prepublishOnly": "npm run build"
+	},
+	"keywords": [],
+	"author": "ninjaninja140",
+	"license": "MIT",
+	"description": "A auto-updating roblox-ts package for using Lucide icons in Roblox.",
+	"types": "out/index.d.ts",
+	"files": [
+		"out",
+		"README.md",
+		"LICENSE.txt",
+		"!**/*.tsbuildinfo"
+	],
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/ninjaninja140/rbxts-lucide.git"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "^2.5.0",
+		"@rbxts/compiler-types": "^3.0.0-types.0",
+		"@rbxts/react": "^17.3.7-ts.2",
+		"@rbxts/types": "^1.0.925",
+		"axios": "^1.18.1",
+		"dotenv": "^17.4.2",
+		"exiftool-vendored": "^36.0.0",
+		"form-data": "^4.0.6",
+		"roblox-ts": "^3.0.0",
+		"sharp": "^0.35.2",
+		"svgo": "^4.0.1",
+		"tsx": "^4.22.4",
+		"typescript": "^6.0.3"
+	},
+	"peerDependencies": {
+		"@rbxts/react": "*"
+	},
+	"packageManager": "yarn@4.17.0"
+}
