@@ -8,9 +8,7 @@ A roblox-ts package that brings [Lucide](https://lucide.dev) Roblox. Over **1,70
 
 ```bash
 npm install @nrbx/lucide
-# or
 yarn add @nrbx/lucide
-# or
 pnpm add @nrbx/lucide
 ```
 
