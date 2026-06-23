@@ -2,7 +2,7 @@
 
 > Lucide icons for Roblox React ([@rbxts/react](https://www.npmjs.com/package/@rbxts/react))
 
-A roblox-ts package that brings the beautiful [Lucide](https://lucide.dev) icon set to Roblox. Over **1,700 icons** available as typed React components, with support for dynamic lookup, icon combining, and full Roblox ImageLabel props.
+A roblox-ts package that brings [Lucide](https://lucide.dev) Roblox. Over **1,700 icons** available as typed React components, with support for dynamic lookup, icon combining, and full Roblox ImageLabel props.
 
 ## 📦 Installation
 
@@ -38,7 +38,7 @@ And to your `tsconfig.json`:
 
 ```tsx
 import React from "@rbxts/react";
-import { Activity, Heart, Settings } from "@nrbx/lucide";
+import { Activity } from "@nrbx/lucide";
 
 function MyComponent() {
     return (
@@ -60,7 +60,7 @@ function MyComponent() {
 Every icon is available as a PascalCase named export:
 
 ```tsx
-import { ArrowRight, Bell, Camera, Download, Mail, User } from "@nrbx/lucide";
+import { ArrowRight } from "@nrbx/lucide";
 
 <ArrowRight Size={new UDim2(0, 32, 0, 32)} />
 ```
@@ -100,16 +100,6 @@ import { Circle, Check } from "@nrbx/lucide";
 </Circle>
 ```
 
-### Base Template (`IconTemplate`)
-
-Use the low-level template directly with an icon id:
-
-```tsx
-import { IconTemplate } from "@nrbx/lucide";
-
-<IconTemplate icon="activity" Size={new UDim2(0, 24, 0, 24)} />
-```
-
 ## 🔧 Props
 
 All icon components accept standard Roblox `ImageLabel` properties plus:
@@ -136,27 +126,6 @@ All standard `ImageLabel` props are supported: `Size`, `Position`, `ImageColor3`
 | `GetIconData(name)` | `IconData \| undefined` | Full icon metadata (id, title, assetId, uri, contributors) |
 | `GetIconUri(name)` | `string` | The `rbxassetid://` URI string for the icon |
 | `GetAllIcons()` | `IconData[]` | Array of all available icon metadata entries |
-
-## 🏗️ Architecture
-
-```
-@nrbx/lucide
-├── src/
-│   ├── IconTemplate.tsx    — Base icon component (renders ImageLabel)
-│   ├── DynamicIcon.tsx     — Dynamic lookup by string name
-│   ├── CombineIcon.tsx     — Layer multiple icons together
-│   ├── icons.json          — Icon metadata (id, title, assetId, uri, contributors)
-│   ├── icons/              — ~1,700 generated icon components
-│   │   ├── activity.tsx
-│   │   ├── arrow-right.tsx
-│   │   ├── ...
-│   │   └── index.ts        — Barrel export
-│   └── index.tsx           — Package entry point
-└── scripts/
-    ├── generate-pngs.ts    — SVG → PNG conversion
-    ├── upload-pngs.ts      — Roblox Open Cloud upload
-    └── generate-icons.ts   — Component code generation
-```
 
 ## 📄 License
 
