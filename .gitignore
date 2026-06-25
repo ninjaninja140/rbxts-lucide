@@ -4,4 +4,6 @@
 *.tsbuildinfo
 img
 src/icons/*.tsx
+src/icons/*.ts
+!src/icons/.gitkeep
 .env

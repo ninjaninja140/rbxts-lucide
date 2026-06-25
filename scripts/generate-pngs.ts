@@ -122,12 +122,12 @@ async function convertSvgToPng(svgPath: string, outputPath: string) {
 	console.log(`Failed: ${failed}`);
 	console.log(`Output directory: ${outputDir}`);
 
-	// Generate / update icons.json for the package with placeholder asset IDs
+	// Generate / update icon-data.json for the package with placeholder asset IDs
 	// Real asset IDs are filled in by scripts/upload-pngs.ts
-	console.log(`\nGenerating src/icons.json...`);
-	const iconsJsonPath = path.resolve('src/icons.json');
+	console.log(`\nGenerating src/icon-data.json...`);
+	const iconsJsonPath = path.resolve('src/icon-data.json');
 
-	// Load existing icons.json if it exists, so we preserve assetId/uri from prior runs
+	// Load existing icon-data.json if it exists, so we preserve assetId/uri from prior runs
 	let existingMap = new Map<string, { assetId: number; uri: string }>();
 	if (fs.existsSync(iconsJsonPath)) {
 		const existing: Array<{ id: string; assetId: number; uri: string }> = JSON.parse(
@@ -136,9 +136,9 @@ async function convertSvgToPng(svgPath: string, outputPath: string) {
 		for (const entry of existing) {
 			existingMap.set(entry.id, { assetId: entry.assetId, uri: entry.uri });
 		}
-		console.log(`Found existing icons.json with ${existing.length} entries — will merge.`);
+		console.log(`Found existing icon-data.json with ${existing.length} entries — will merge.`);
 	} else {
-		console.log('No existing icons.json found — creating fresh.');
+		console.log('No existing icon-data.json found — creating fresh.');
 	}
 
 	const jsonFiles = fs.readdirSync(outputDir).filter((f) => f.endsWith('.json'));

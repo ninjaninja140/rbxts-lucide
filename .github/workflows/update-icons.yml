@@ -105,7 +105,7 @@ jobs:
       - name: Commit and push changes
         if: steps.check.outputs.changed == 'true'
         run: |
-          git add lucide src/icons.json src/icons/ package.json
+          git add lucide src/icon-data.json src/icons/ package.json
           git commit -m "chore: update lucide icons to latest and bump to v${{ steps.version.outputs.new_version }}"
           git push origin HEAD
         env:

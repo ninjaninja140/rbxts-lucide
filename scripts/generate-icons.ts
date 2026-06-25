@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-const ICONS_JSON = path.resolve('src/icons.json');
+const ICONS_JSON = path.resolve('src/icon-data.json');
 const OUTPUT_DIR = path.resolve('src/icons');
 
 interface IconEntry {
@@ -60,7 +60,7 @@ export default function ${componentName}(props: Partial<IconProps>): React.Eleme
 	const barrelExports = icons.map((icon) => `export { default as ${icon.title} } from "./${icon.id}";`).join('\n');
 
 	const barrelContent = `// Auto-generated icon barrel file. Do not edit manually.
-// Generated from src/icons.json by scripts/generate-icons.ts
+// Generated from src/icon-data.json by scripts/generate-icons.ts
 
 ${barrelExports}
 `;

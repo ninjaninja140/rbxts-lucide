@@ -1,0 +1,59 @@
+name: Publish Minor Release
+
+on:
+  workflow_dispatch:
+    # Manual trigger only — bumps minor version, regenerates icons, builds, and publishes to npm
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  publish-minor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "yarn"
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Generate icon components
+        run: yarn generate-icons
+
+      - name: Bump patch version
+        id: version
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          npm version patch --no-git-tag-version
+          NEW_VERSION=$(node -p "require('./package.json').version")
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+          echo "Bumped to v$NEW_VERSION"
+
+      - name: Build roblox-ts
+        run: yarn build
+
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
+          npm publish --access public
+
+      - name: Commit and push changes
+        run: |
+          git add src/icon-data.json src/icons/ package.json
+          git commit -m "chore: bump minor version to v${{ steps.version.outputs.new_version }}"
+          git push origin HEAD
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

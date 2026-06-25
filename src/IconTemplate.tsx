@@ -1,5 +1,5 @@
 import React from '@rbxts/react';
-import iconsData from './icons.json';
+import iconsData from './icon-data.json';
 
 export interface IconProps extends Partial<WritableInstanceProperties<ImageLabel>> {
 	/** The icon identifier (kebab-case id from the icon set) */

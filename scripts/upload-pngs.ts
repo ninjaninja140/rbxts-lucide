@@ -10,7 +10,7 @@ const ROBLOX_USER_ID = process.env.ROBLOX_USER_ID;
 const WEBHOOK_URL = process.env.ROBLOX_WEBHOOK_UPLOAD_ID;
 
 const IMG_DIR = path.resolve('img');
-const OUTPUT_JSON = path.resolve('src/icons.json');
+const OUTPUT_JSON = path.resolve('src/icon-data.json');
 
 // Tune these to stay within Roblox API limits
 const CONCURRENCY = 2; // Max simultaneous uploads
