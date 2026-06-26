@@ -74,6 +74,12 @@ jobs:
           ROBLOX_WEBHOOK_UPLOAD_ID: ${{ secrets.DISCORD_WEBHOOK_URL }}
         run: yarn upload-pngs
 
+      - name: Convert decal IDs to image IDs
+        if: steps.check.outputs.changed == 'true'
+        env:
+          ROBLOX_KEY: ${{ secrets.ROBLOX_KEY }}
+        run: yarn convert-ids
+
       - name: Generate React icon components
         if: steps.check.outputs.changed == 'true'
         run: yarn generate-icons

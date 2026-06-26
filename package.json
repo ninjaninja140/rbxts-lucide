@@ -5,6 +5,7 @@
 	"scripts": {
 		"generate-pngs": "tsx scripts/generate-pngs.ts lucide/icons img",
 		"upload-pngs": "tsx scripts/upload-pngs.ts",
+		"convert-ids": "tsx scripts/convert-ids.ts",
 		"generate-icons": "tsx scripts/generate-icons.ts",
 		"build": "rbxtsc",
 		"watch": "rbxtsc -w",
