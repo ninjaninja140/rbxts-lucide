@@ -34,13 +34,18 @@ export function DynamicIcon(props: DynamicIconProps): React.Element {
 		warn(`[Lucide] DynamicIcon: icon "${props.name}" not found`);
 	}
 
+	// Exclude custom props (name, children) from being passed to ImageLabel
+	const imageLabelProps = { ...props } as Record<string, unknown>;
+	imageLabelProps.name = undefined;
+	imageLabelProps.children = undefined;
+
 	return (
 		<imagelabel
 			Image={uri !== '' ? uri : undefined}
 			BackgroundTransparency={1}
 			Size={new UDim2(0, 24, 0, 24)}
 			ScaleType={'Fit'}
-			{...props}
+			{...imageLabelProps}
 		>
 			{props.children}
 		</imagelabel>

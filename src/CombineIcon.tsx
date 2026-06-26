@@ -15,6 +15,10 @@ export function CombineIcons(
 		icons: string[];
 	} & Partial<WritableInstanceProperties<ImageLabel>>
 ): React.Element {
+	// Exclude custom props (icons) from being passed to ImageLabel
+	const imageLabelProps = { ...props } as Record<string, unknown>;
+	imageLabelProps.icons = undefined;
+
 	// Build elements from innermost to outermost
 	let element: React.Element | undefined;
 
@@ -28,12 +32,12 @@ export function CombineIcons(
 				BackgroundTransparency={1}
 				Size={new UDim2(1, 0, 1, 0)}
 				ScaleType={'Fit'}
-				{...(i === 0 ? props : {})}
+				{...(i === 0 ? imageLabelProps : {})}
 			>
 				{element}
 			</imagelabel>
 		);
 	}
 
-	return element ?? <imagelabel {...props} />;
+	return element ?? <imagelabel {...imageLabelProps} />;
 }

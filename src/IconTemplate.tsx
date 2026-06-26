@@ -33,9 +33,14 @@ for (const item of iconsData as IconData[]) {
 export function IconTemplate(props: IconProps): React.Element {
 	const iconData = iconMap.get(props.icon);
 
+	// Exclude custom props (icon, children) from being passed to ImageLabel
+	const imageLabelProps = { ...props } as Record<string, unknown>;
+	imageLabelProps.icon = undefined;
+	imageLabelProps.children = undefined;
+
 	if (!iconData) {
 		warn(`[Lucide] Icon "${props.icon}" not found in icon set`);
-		return <imagelabel {...props}>{props.children}</imagelabel>;
+		return <imagelabel {...imageLabelProps}>{props.children}</imagelabel>;
 	}
 
 	return (
@@ -44,7 +49,7 @@ export function IconTemplate(props: IconProps): React.Element {
 			BackgroundTransparency={1}
 			Size={new UDim2(0, 24, 0, 24)}
 			ScaleType={Enum.ScaleType.Fit}
-			{...props}
+			{...imageLabelProps}
 		>
 			{props.children}
 		</imagelabel>
