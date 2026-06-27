@@ -10,7 +10,7 @@ const ICONS_JSON = path.resolve('src/icon-data.json');
 
 // Tune these to stay within Roblox API limits
 const CONCURRENCY = 4; // Max simultaneous API calls
-const RETRY_ATTEMPTS = 5;
+const RETRY_ATTEMPTS = 30;
 const RETRY_BASE_DELAY_MS = 5000;
 
 interface IconEntry {
