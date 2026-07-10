@@ -2968,6 +2968,14 @@
 		"converted": true
 	},
 	{
+		"id": "circle-euro-sign",
+		"title": "CircleEuroSign",
+		"assetId": 89575023272292,
+		"uri": "rbxassetid://89575023272292",
+		"contributors": "Guido3000",
+		"converted": true
+	},
+	{
 		"id": "circle-fading-arrow-up",
 		"title": "CircleFadingArrowUp",
 		"assetId": 79495099293187,
@@ -10493,6 +10501,14 @@
 		"assetId": 131187126492542,
 		"uri": "rbxassetid://131187126492542",
 		"contributors": "yukosgiti, ericfennis, csandman",
+		"converted": true
+	},
+	{
+		"id": "server-plus",
+		"title": "ServerPlus",
+		"assetId": 115329034747245,
+		"uri": "rbxassetid://115329034747245",
+		"contributors": "Turboman3000",
 		"converted": true
 	},
 	{
