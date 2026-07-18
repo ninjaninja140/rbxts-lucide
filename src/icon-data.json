@@ -4604,7 +4604,7 @@
 		"title": "EthernetPort",
 		"assetId": 95695444342713,
 		"uri": "rbxassetid://95695444342713",
-		"contributors": "ericfennis",
+		"contributors": "ericfennis, karsa-mistmere",
 		"converted": true
 	},
 	{
@@ -6316,7 +6316,7 @@
 		"title": "HdmiPort",
 		"assetId": 109815489907909,
 		"uri": "rbxassetid://109815489907909",
-		"contributors": "danielbayley",
+		"contributors": "danielbayley, karsa-mistmere",
 		"converted": true
 	},
 	{
@@ -10261,6 +10261,14 @@
 		"assetId": 76262034890008,
 		"uri": "rbxassetid://76262034890008",
 		"contributors": "danielbayley",
+		"converted": true
+	},
+	{
+		"id": "scan-box",
+		"title": "ScanBox",
+		"assetId": 122485866172920,
+		"uri": "rbxassetid://122485866172920",
+		"contributors": "wojtekmaj, ericfennis, karsa-mistmere",
 		"converted": true
 	},
 	{
