@@ -6104,6 +6104,13 @@
 		"contributors": "ericfennis, danielbayley"
 	},
 	{
+		"id": "layout-freeform",
+		"title": "LayoutFreeform",
+		"assetId": 0,
+		"uri": "",
+		"contributors": "samuelalake"
+	},
+	{
 		"id": "layout-grid",
 		"title": "LayoutGrid",
 		"assetId": 78052102686635,
@@ -7028,11 +7035,25 @@
 		"contributors": "colebemis, csandman, ericfennis, karsa-mistmere"
 	},
 	{
+		"id": "mic-audio-lines",
+		"title": "MicAudioLines",
+		"assetId": 0,
+		"uri": "",
+		"contributors": "karsa-mistmere, jguddas"
+	},
+	{
 		"id": "mic-off",
 		"title": "MicOff",
 		"assetId": 110146479175121,
 		"uri": "rbxassetid://110146479175121",
 		"contributors": "colebemis, csandman, ericfennis, karsa-mistmere, LieOnLion"
+	},
+	{
+		"id": "mic-signal",
+		"title": "MicSignal",
+		"assetId": 0,
+		"uri": "",
+		"contributors": "karsa-mistmere, jguddas"
 	},
 	{
 		"id": "mic-vocal",
@@ -8251,13 +8272,6 @@
 		"assetId": 105233364383557,
 		"uri": "rbxassetid://105233364383557",
 		"contributors": "danielbayley, karsa-mistmere"
-	},
-	{
-		"id": "podcast",
-		"title": "Podcast",
-		"assetId": 134236857642619,
-		"uri": "rbxassetid://134236857642619",
-		"contributors": "iiaishwarya, ericfennis, karsa-mistmere, jguddas"
 	},
 	{
 		"id": "podium",
