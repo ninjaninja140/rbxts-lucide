@@ -1,12 +1,13 @@
 {
 	"name": "@nrbx/lucide",
-	"version": "1.0.28",
+	"version": "1.1.0",
 	"main": "out/init.luau",
 	"scripts": {
 		"generate-pngs": "tsx scripts/generate-pngs.ts lucide/icons img",
 		"upload-pngs": "tsx scripts/upload-pngs.ts",
 		"convert-ids": "tsx scripts/convert-ids.ts",
 		"generate-icons": "tsx scripts/generate-icons.ts",
+		"pipeline": "tsx scripts/run-pipeline.ts",
 		"build": "rbxtsc",
 		"watch": "rbxtsc -w",
 		"prebuild": "tsx scripts/generate-icons.ts",

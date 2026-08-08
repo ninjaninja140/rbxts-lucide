@@ -17,7 +17,10 @@ A roblox-ts package that brings [Lucide](https://lucide.dev) Roblox. Over **1,70
 
 > **DISCLAIMER**: This package does not publish the icons following icons and icon tags due to Roblox trust and moderation TOS: `cannabis`, `cannabis-off`, `bomb`, `qr-code`, `scan-qr-code`, `alcohol`, `brewery`, `beer`, `cannabis`, `bomb`, `explosive`, `smoking`
 
-## 📦 Installation
+> **DEVELOPERS NEEDED**: @nrbx/lucide is looking for development help! If you are interested in helping out, mainly towards our filled icons library, please you are welcome to build on top of what we have and make a pull request, we're active and always happy to receive contributions! Our filled Icons library is an active work in progress, and is *very broken* from it not being very advanced (and because I don't truly understand how to achieve what I want to do without a lot of manual adobe illustrator work), its available to use, but contributions to improve it are always welcome!
+
+
+## Installation
 
 ```bash
 npm install @nrbx/lucide
@@ -45,7 +48,7 @@ And to your `tsconfig.json`:
 "typeRoots": ["node_modules/@rbxts", "node_modules/@nrbx"]
 ```
 
-## 🚀 Quick Start
+## Quick Start
 
 ```tsx
 import React from "@rbxts/react";
@@ -64,7 +67,7 @@ function MyComponent() {
 }
 ```
 
-## 🎨 Usage
+## Usage
 
 ### Named Icon Components
 
@@ -86,6 +89,22 @@ import { DynamicIcon } from "@nrbx/lucide";
 const iconName = "activity";
 
 <DynamicIcon name={iconName} Size={new UDim2(0, 48, 0, 48)} />
+```
+
+### Filled icons (Experimental)
+
+Append `-fill` to any icon name to use its filled (solid) variation instead of the default outline style.
+**EXTREME CAUTION**: The filled icons library is an experimental work in progress, and is very broken. Use at your own risk, many icons are malformed or missing, and some icons are not filled at all. If you want to help improve the filled icons library, please fork and make a pull request of our repo, we're active and always happy to receive contributions.
+
+```tsx
+<DynamicIcon name="circle-fill" Size={new UDim2(0, 48, 0, 48)} />
+<DynamicIcon name="star-fill" Size={new UDim2(0, 48, 0, 48)} />
+```
+
+```tsx
+import { ArrowRightFill } from "@nrbx/lucide";
+
+<ArrowRightFill Size={new UDim2(0, 32, 0, 32)} />
 ```
 
 ### Icon Combining (`CombineIcons`)
@@ -130,7 +149,7 @@ All standard `ImageLabel` props are supported: `Size`, `Position`, `ImageColor3`
 - `BackgroundTransparency` — `1` (transparent background)
 - `ScaleType` — `"Fit"`
 
-## 📋 Utility Functions
+## Utility Functions
 
 | Function | Returns | Description |
 |----------|---------|-------------|
@@ -138,7 +157,7 @@ All standard `ImageLabel` props are supported: `Size`, `Position`, `ImageColor3`
 | `GetIconUri(name)` | `string` | The `rbxassetid://` URI string for the icon |
 | `GetAllIcons()` | `IconData[]` | Array of all available icon metadata entries |
 
-## 📄 License
+## License
 
 MIT — see [LICENSE.txt](./LICENSE.txt)
 

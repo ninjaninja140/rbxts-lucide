@@ -4,9 +4,9 @@ import sharp from 'sharp';
 import { optimize } from 'svgo';
 
 const tagBlacklist: string[] = ['alcohol', 'brewery', 'beer', 'cannabis', 'bomb', 'explosive', 'smoking'];
-const iconBlacklist: string[] = ['cannabis', 'cannabis-off', 'bomb', 'qr-code', 'scan-qr-code'];
+const iconBlacklist: string[] = ['cannabis', 'cannabis-off', 'bomb', 'qr-code', 'scan-qr-code', 'scan-square', 'barcode'];
 
-const concurrencyLimit = 32; // how many we are gonna run at once
+const concurrencyLimit = 32;
 const args = process.argv.slice(2);
 
 const inputDir = args[0];
@@ -78,15 +78,27 @@ async function convertSvgToPng(svgPath: string, outputPath: string) {
 		process.exit(0);
 	}
 
-	console.log(`Found ${svgFiles.length} SVG files. Starting conversion...\n`);
+
+	const newFiles = svgFiles.filter((file) => {
+		const pngName = `${path.basename(file, '.svg')}.png`;
+		return !fs.existsSync(path.join(outputDir, pngName));
+	});
+	const skippedExisting = svgFiles.length - newFiles.length;
+	if (skippedExisting > 0) console.log(`Skipping ${skippedExisting} already-converted icons.`);
+
+	if (newFiles.length === 0) {
+		console.log('All SVGs already converted. Nothing to do.');
+	} else {
+		console.log(`Found ${newFiles.length} new SVGs to convert. Starting conversion...\n`);
+	}
 
 	const results: Array<{ file: string; success: boolean; error?: string }> = [];
-	const totalFiles = svgFiles.length;
+	const totalFiles = newFiles.length;
 	let processedCount = 0;
 
-	// Process in batches to avoid memory issues
-	for (let i = 0; i < svgFiles.length; i += concurrencyLimit) {
-		const batch = svgFiles.slice(i, i + concurrencyLimit);
+
+	for (let i = 0; i < newFiles.length; i += concurrencyLimit) {
+		const batch = newFiles.slice(i, i + concurrencyLimit);
 
 		const batchPromises = batch.map(async (file) => {
 			const inputPath = path.join(inputDir, file);
@@ -96,9 +108,7 @@ async function convertSvgToPng(svgPath: string, outputPath: string) {
 			try {
 				const success = await convertSvgToPng(inputPath, outputPath);
 				if (success) return { file, success: true };
-				else {
-					return { file, success: false };
-				}
+				else return { file, success: false };
 			} catch (error) {
 				const errorMessage = error instanceof Error ? error.message : String(error);
 				console.error(`Error converting ${file}:`, errorMessage);
@@ -113,50 +123,81 @@ async function convertSvgToPng(svgPath: string, outputPath: string) {
 		console.log(`Progress: ${processedCount}/${totalFiles} completed (${totalFiles - processedCount} remaining)`);
 	}
 
-	// Report results
+
 	const successful = results.filter((r) => r.success).length;
 	const failed = results.filter((r) => !r.success).length;
 
 	console.log(`\nConversion complete!`);
 	console.log(`Successful: ${successful}`);
 	console.log(`Failed: ${failed}`);
+	console.log(`Skipped (already present): ${skippedExisting}`);
 	console.log(`Output directory: ${outputDir}`);
-
-	// Generate / update icon-data.json for the package with placeholder asset IDs
-	// Real asset IDs are filled in by scripts/upload-pngs.ts
 	console.log(`\nGenerating src/icon-data.json...`);
-	const iconsJsonPath = path.resolve('src/icon-data.json');
 
-	// Load existing icon-data.json if it exists, so we preserve assetId/uri from prior runs
-	let existingMap = new Map<string, { assetId: number; uri: string }>();
+	const iconsJsonPath = path.resolve("src/icon-data.json");
+
+	const merged = new Map<
+		string,
+		{ id: string; title: string; libraryId?: number; assetId: number; uri: string; contributors: string }
+	>();
+
 	if (fs.existsSync(iconsJsonPath)) {
-		const existing: Array<{ id: string; assetId: number; uri: string }> = JSON.parse(
-			fs.readFileSync(iconsJsonPath, 'utf-8')
-		);
+		const existing = JSON.parse(fs.readFileSync(iconsJsonPath, "utf-8")) as Array<{
+			id: string;
+			title: string;
+			libraryId?: number;
+			assetId: number;
+			uri: string;
+			contributors: string;
+		}>;
 		for (const entry of existing) {
-			existingMap.set(entry.id, { assetId: entry.assetId, uri: entry.uri });
+			merged.set(entry.id, { ...entry });
 		}
-		console.log(`Found existing icon-data.json with ${existing.length} entries — will merge.`);
+		console.log(`Found existing icon-data.json with ${merged.size} entries.`);
 	} else {
-		console.log('No existing icon-data.json found — creating fresh.');
+		console.log("No existing icon-data.json found — creating fresh.");
 	}
 
-	const jsonFiles = fs.readdirSync(outputDir).filter((f) => f.endsWith('.json'));
-	const iconsData: Array<{ id: string; title: string; assetId: number; uri: string; contributors: string }> = [];
+	const jsonFiles = fs.readdirSync(outputDir).filter((f) => f.endsWith(".json"));
+
+	let added = 0;
+	let preserved = 0;
 
 	for (const jsonFile of jsonFiles) {
-		const data = JSON.parse(fs.readFileSync(path.join(outputDir, jsonFile), 'utf-8'));
-		const existing = existingMap.get(data.id);
-		iconsData.push({
-			id: data.id as string,
+		const data = JSON.parse(fs.readFileSync(path.join(outputDir, jsonFile), "utf-8"));
+		const id = data.id as string;
+		const prev = merged.get(id);
+
+		if (prev?.libraryId) {
+			preserved++;
+			continue;
+		}
+
+		merged.set(id, {
+			id,
 			title: data.title as string,
-			assetId: existing?.assetId ?? 0,
-			uri: existing?.uri ?? '',
+			libraryId: prev?.libraryId,
+			assetId: prev?.assetId ?? 0,
+			uri: prev?.uri ?? "",
 			contributors: data.contributors as string,
 		});
+		added++;
 	}
 
-	iconsData.sort((a, b) => a.id.localeCompare(b.id));
-	fs.writeFileSync(iconsJsonPath, JSON.stringify(iconsData, null, '\t'), 'utf-8');
-	console.log(`Wrote ${iconsData.length} entries to ${iconsJsonPath}`);
+	const sorted = [...merged.values()].sort((a, b) => a.id.localeCompare(b.id));
+
+	const cleaned = sorted.map((e) => {
+		const entry: Record<string, unknown> = {
+			id: e.id,
+			title: e.title,
+			assetId: e.assetId,
+			uri: e.uri,
+			contributors: e.contributors,
+		};
+		if (e.libraryId) entry.libraryId = e.libraryId;
+		return entry;
+	});
+
+	fs.writeFileSync(iconsJsonPath, JSON.stringify(cleaned, null, "\t"), "utf-8");
+	console.log(`Wrote ${cleaned.length} entries (${added} new/updated, ${preserved} unchanged with libraryId) to ${iconsJsonPath}`);
 })();

@@ -1,22 +1,33 @@
-import axios from 'axios';
-import FormData from 'form-data';
-import fs from 'node:fs';
-import path from 'node:path';
+import axios from "axios";
+import FormData from "form-data";
+import fs from "node:fs";
+import path from "node:path";
 
-import 'dotenv/config';
+import "dotenv/config";
 
 const ROBLOX_KEY = process.env.ROBLOX_KEY;
 const ROBLOX_USER_ID = process.env.ROBLOX_USER_ID;
 const WEBHOOK_URL = process.env.ROBLOX_WEBHOOK_UPLOAD_ID;
 
-const IMG_DIR = path.resolve('img');
-const OUTPUT_JSON = path.resolve('src/icon-data.json');
+const IMG_DIR = path.resolve("img");
+const OUTPUT_JSON = path.resolve("src/icon-data.json");
 
-// Tune these to stay within Roblox API limits
-const CONCURRENCY = 2; // Max simultaneous uploads
-const BATCH_DELAY_MS = 2000; // Pause between batches (ms)
-const RETRY_ATTEMPTS = 5; // Max retries on rate limit / transient errors
-const RETRY_BASE_DELAY_MS = 2000; // Base delay for exponential backoff
+const CONCURRENCY = 10;
+const RETRY_ATTEMPTS = 10;
+const MAX_POLL_ATTEMPTS = 30;
+const POLL_DELAY_MS = 2000;
+const DEFAULT_RETRY_AFTER_MS = 60_000;
+
+const SEP = "─".repeat(50);
+
+class AccountLockedError extends Error {
+	constructor(context: string) {
+		super(
+			`ACCOUNT LOCKED: Roblox returned 403 at "${context}". The account cannot upload. Stopping immediately.`,
+		);
+		this.name = "AccountLockedError";
+	}
+}
 
 interface IconMeta {
 	id: string;
@@ -25,6 +36,7 @@ interface IconMeta {
 }
 
 interface IconEntry extends IconMeta {
+	libraryId: number;
 	assetId: number;
 	uri: string;
 }
@@ -43,8 +55,7 @@ function sleep(ms: number): Promise<void> {
 }
 
 function readIconMeta(jsonPath: string): IconMeta {
-	const data = JSON.parse(fs.readFileSync(jsonPath, 'utf-8'));
-
+	const data = JSON.parse(fs.readFileSync(jsonPath, "utf-8"));
 	return {
 		id: data.id as string,
 		title: data.title as string,
@@ -52,69 +63,93 @@ function readIconMeta(jsonPath: string): IconMeta {
 	};
 }
 
-async function fetchWithRetry(url: string, options: RequestInit, label: string): Promise<Response> {
+function parseRetryAfterMs(headerValue: string | null): number {
+	if (!headerValue) return DEFAULT_RETRY_AFTER_MS;
+	const parsed = parseFloat(headerValue);
+	return Number.isNaN(parsed) ? DEFAULT_RETRY_AFTER_MS : parsed * 1000;
+}
+
+async function fetchWithRetry(
+	url: string,
+	options: RequestInit,
+	label: string,
+): Promise<Response> {
 	for (let attempt = 0; attempt <= RETRY_ATTEMPTS; attempt++) {
 		const resp = await fetch(url, options);
 
 		if (resp.ok) return resp;
 
-		// On 429 or 5xx, retry with backoff
-		if (resp.status === 429 || resp.status >= 500) {
-			if (attempt === RETRY_ATTEMPTS)
-				throw new Error(`[${label}] HTTP ${resp.status} after ${RETRY_ATTEMPTS} retries: ${await resp.text()}`);
+		if (resp.status === 403) {
+			throw new AccountLockedError(label);
+		}
 
-			// Honour Retry-After header if present, else exponential backoff + jitter
-			const retryAfter = resp.headers.get('Retry-After');
-			const backoff = retryAfter
-				? parseFloat(retryAfter) * 1000
-				: RETRY_BASE_DELAY_MS * 2 ** attempt + Math.random() * 500;
-
+		if (resp.status === 429) {
+			if (attempt === RETRY_ATTEMPTS) {
+				throw new Error(
+					`[${label}] HTTP 429 after ${RETRY_ATTEMPTS} retries: ${await resp.text()}`,
+				);
+			}
+		const waitMs = parseRetryAfterMs(resp.headers.get("x-retryafter"));
 			console.warn(
-				`   [${label}] HTTP ${resp.status} — retrying in ${Math.round(backoff)}ms (attempt ${attempt + 1}/${RETRY_ATTEMPTS})`
+				`   ⚠ [${label}] Rate limited — waiting ${Math.round(waitMs / 1000)}s (attempt ${attempt + 1}/${RETRY_ATTEMPTS})`,
+			);
+			await sleep(waitMs);
+			continue;
+		}
+
+		if (resp.status >= 500) {
+			if (attempt === RETRY_ATTEMPTS) {
+				throw new Error(
+					`[${label}] HTTP ${resp.status} after ${RETRY_ATTEMPTS} retries: ${await resp.text()}`,
+				);
+			}
+			const backoff = 2000 * 2 ** attempt + Math.random() * 500;
+			console.warn(
+				`   ⚠ [${label}] Server error ${resp.status} — retrying in ${Math.round(backoff / 1000)}s (attempt ${attempt + 1}/${RETRY_ATTEMPTS})`,
 			);
 			await sleep(backoff);
 			continue;
 		}
 
-		// Non-retryable error — throw immediately
 		const text = await resp.text();
 		throw new Error(`[${label}] HTTP ${resp.status}: ${text}`);
 	}
 
-	// Unreachable, but TypeScript needs a return path
 	throw new Error(`[${label}] Exceeded retry attempts`);
 }
 
 async function pollOperation(operationId: string): Promise<OperationResult> {
-	const maxAttempts = 30;
-	const delayMs = 2000;
-
-	for (let attempt = 0; attempt < maxAttempts; attempt++) {
+	for (let attempt = 0; attempt < MAX_POLL_ATTEMPTS; attempt++) {
 		const resp = await fetchWithRetry(
 			`https://apis.roblox.com/assets/v1/operations/${operationId}`,
-			{ headers: { 'x-api-key': ROBLOX_KEY! } },
-			`poll:${operationId}`
+			{ headers: { "x-api-key": ROBLOX_KEY! } },
+			`poll:${operationId}`,
 		);
 
 		const result = (await resp.json()) as OperationResult;
 		if (result.done) return result;
 
-		await sleep(delayMs);
+		if (attempt > 0 && attempt % 5 === 0) {
+			console.log(`   … waiting for operation ${operationId} (${attempt * POLL_DELAY_MS / 1000}s elapsed)`);
+		}
+		await sleep(POLL_DELAY_MS);
 	}
 
-	throw new Error(`Operation ${operationId} timed out after ${maxAttempts} attempts`);
+	throw new Error(
+		`Operation ${operationId} timed out after ${MAX_POLL_ATTEMPTS} attempts`,
+	);
 }
 
-async function uploadToRoblox(pngPath: string, meta: IconMeta): Promise<{ assetId: number; uri: string }> {
-	console.log(`Uploading ${meta.id}...`);
-	console.log(`   Path: ${pngPath}`);
-
+async function uploadToRoblox(
+	pngPath: string,
+	meta: IconMeta,
+): Promise<{ id: number }> {
 	const form = new FormData();
 
 	form.append(
-		'request',
+		"request",
 		JSON.stringify({
-			assetType: 'Decal',
+			assetType: "Decal",
 			displayName: meta.id,
 			description: `Contributors: ${meta.contributors}`,
 			creationContext: {
@@ -122,71 +157,122 @@ async function uploadToRoblox(pngPath: string, meta: IconMeta): Promise<{ assetI
 					userId: ROBLOX_USER_ID,
 				},
 			},
-		})
+		}),
 	);
 
-	form.append('fileContent', fs.createReadStream(pngPath));
+	form.append("fileContent", fs.createReadStream(pngPath));
 
-	const uploadResp = await axios.post('https://apis.roblox.com/assets/v1/assets', form, {
-		headers: {
-			'x-api-key': ROBLOX_KEY!,
-			...form.getHeaders(),
-		},
-	});
+	const axiosError = (
+		err: unknown,
+	): { status?: number; headers?: Record<string, string> } => {
+		const r = (err as { response?: { status?: number; headers?: Record<string, string> } }).response;
+		return r ?? {};
+	};
 
-	console.log(`   Upload response: ${JSON.stringify(uploadResp.data)}`);
+	let uploadRespData: unknown;
+	for (let attempt = 0; attempt <= RETRY_ATTEMPTS; attempt++) {
+		try {
+			const resp = await axios.post(
+				"https://apis.roblox.com/assets/v1/assets",
+				form,
+				{
+					headers: {
+						"x-api-key": ROBLOX_KEY!,
+						...form.getHeaders(),
+					},
+				},
+			);
+			uploadRespData = resp.data;
+			break;
+		} catch (err) {
+			const { status, headers } = axiosError(err);
 
-	const uploadResult = uploadResp.data as { path: string };
+			if (status === 403) throw new AccountLockedError(`upload:${meta.id}`);
 
-	// Response is { "path": "operations/{operationId}" }
-	const operationId = uploadResult.path?.split('/').pop();
-	if (!operationId)
-		throw new Error(`No operationId in upload response for ${meta.id}: ${JSON.stringify(uploadResult)}`);
+			if (status === 429) {
+				if (attempt === RETRY_ATTEMPTS) {
+					const msg = err instanceof Error ? err.message : String(err);
+					throw new Error(
+						`[upload:${meta.id}] HTTP 429 after ${RETRY_ATTEMPTS} retries: ${msg}`,
+					);
+				}
+			const waitMs = parseRetryAfterMs(headers?.["x-retryafter"] ?? null);
+				console.warn(
+					`   ⚠ [${meta.id}] Rate limited — waiting ${Math.round(waitMs / 1000)}s (attempt ${attempt + 1}/${RETRY_ATTEMPTS})`,
+				);
+				await sleep(waitMs);
+				continue;
+			}
 
-	console.log(`   Uploaded ${meta.id} (operation: ${operationId})`);
+			if (attempt === RETRY_ATTEMPTS || (status && status < 500)) {
+				const msg = err instanceof Error ? err.message : String(err);
+				throw new Error(
+					`[${meta.id}] Failed after ${attempt + 1} attempts: ${msg}`,
+				);
+			}
+			const backoff = 2000 * 2 ** attempt + Math.random() * 500;
+			console.warn(
+				`   ⚠ [${meta.id}] HTTP ${status ?? "error"} — retrying in ${Math.round(backoff / 1000)}s (attempt ${attempt + 1}/${RETRY_ATTEMPTS})`,
+			);
+			await sleep(backoff);
+		}
+	}
+
+	const uploadResult = uploadRespData! as { path: string };
+
+	const operationId = uploadResult.path?.split("/").pop();
+	if (!operationId) {
+		throw new Error(
+			`No operationId in upload response for ${meta.id}: ${JSON.stringify(uploadResult)}`,
+		);
+	}
+
+	console.log(`   ✓ uploaded (operation: ${operationId})`);
 
 	const opResult = await pollOperation(operationId);
 
-	if (opResult.error) throw new Error(`Asset creation failed for ${meta.id}: ${opResult.error}`);
+	if (opResult.error) {
+		throw new Error(
+			`Asset creation failed for ${meta.id}: ${opResult.error}`,
+		);
+	}
 
-	console.log(`   Operation result: ${JSON.stringify(opResult)}`);
+	const assetIdStr = opResult.response?.assetId;
+	if (!assetIdStr) {
+		throw new Error(
+			`No assetId in operation response for ${meta.id}: ${JSON.stringify(opResult)}`,
+		);
+	}
 
 	await axios.post(WEBHOOK_URL!, {
 		content: `Asset created for ${meta.id}: ${opResult.response?.assetId}`,
 	});
 
-	// assetId comes back as a string in the API response
-	const assetIdStr = opResult.response?.assetId;
-	if (!assetIdStr) throw new Error(`No assetId in operation response for ${meta.id}: ${JSON.stringify(opResult)}`);
-
-	const assetId = Number(assetIdStr);
-	return { assetId, uri: `rbxassetid://${assetId}` };
+	return { id: Number(assetIdStr) };
 }
 
-async function processIcon(jsonPath: string, pngPath: string): Promise<IconEntry> {
+async function processIcon(
+	jsonPath: string,
+	pngPath: string,
+): Promise<IconEntry> {
 	const meta = readIconMeta(jsonPath);
-	console.log(`Processing: ${meta.id} (${meta.title})`);
-
-	const { assetId, uri } = await uploadToRoblox(pngPath, meta);
+	const { id } = await uploadToRoblox(pngPath, meta);
 
 	return {
+		libraryId: id,
 		id: meta.id,
 		title: meta.title,
-		assetId,
-		uri,
+		assetId: 0,
+		uri: "",
 		contributors: meta.contributors,
 	};
 }
 
-/**
- * Runs tasks from a list with a fixed concurrency ceiling, firing the next
- * task as soon as a slot opens (true pooling, not batch-and-wait).
- */
 async function runWithConcurrency<T>(
 	items: string[],
 	task: (item: string) => Promise<T | null>,
 	concurrency: number,
-	total: number
+	total: number,
 ): Promise<(T | null)[]> {
 	const results: (T | null)[] = new Array(items.length).fill(null);
 	let nextIndex = 0;
@@ -197,7 +283,9 @@ async function runWithConcurrency<T>(
 			const index = nextIndex++;
 			results[index] = await task(items[index]);
 			completed++;
-			console.log(`Progress: ${completed}/${total} (${total - completed} remaining)`);
+			console.log(
+				`   Progress: ${completed}/${total} (${total - completed} remaining)`,
+			);
 		}
 	}
 
@@ -206,83 +294,170 @@ async function runWithConcurrency<T>(
 }
 
 async function main() {
-	console.log('Starting Roblox icon upload...\n');
-	console.log(`Settings: concurrency=${CONCURRENCY}, batchDelay=${BATCH_DELAY_MS}ms, retries=${RETRY_ATTEMPTS}\n`);
+	console.log(`\n${SEP}`);
+	console.log("   upload-pngs");
+	console.log(`${SEP}\n`);
+
+	console.log(`   concurrency:       ${CONCURRENCY}`);
+	console.log(`   max retries:       ${RETRY_ATTEMPTS}`);
+	console.log(`   operation timeout: ${(MAX_POLL_ATTEMPTS * POLL_DELAY_MS) / 1000}s`);
+	console.log();
 
 	const files = fs.readdirSync(IMG_DIR);
-	const jsonFiles = files.filter((f) => f.endsWith('.json')).sort();
+	const jsonFiles = files.filter((f) => f.endsWith(".json")).sort();
 
 	if (jsonFiles.length === 0) {
-		console.log('No JSON files found in img/. Run generate-pngs first.');
+		console.log("   No JSON files found in img/. Run generate-pngs first.");
 		process.exit(1);
 	}
 
-	// Load existing icons.json to skip already-uploaded icons
 	const existingMap = new Map<string, IconEntry>();
 	if (fs.existsSync(OUTPUT_JSON)) {
-		const existing = JSON.parse(fs.readFileSync(OUTPUT_JSON, 'utf-8')) as IconEntry[];
-		for (const entry of existing) if (entry.assetId > 0) existingMap.set(entry.id, entry);
-		if (existingMap.size > 0)
-			console.log(`Found ${existingMap.size} already-uploaded icons. They will be skipped.\n`);
+		const existing = JSON.parse(
+			fs.readFileSync(OUTPUT_JSON, "utf-8"),
+		) as IconEntry[];
+		for (const entry of existing) if (entry.libraryId) existingMap.set(entry.id, entry);
+		
 	}
 
-	const newJsonFiles = jsonFiles.filter((f) => !existingMap.has(path.basename(f, '.json')));
-
+	const newJsonFiles = jsonFiles.filter(
+		(f) => !existingMap.has(path.basename(f, ".json")),
+	);
 	const skippedCount = jsonFiles.length - newJsonFiles.length;
-	if (skippedCount > 0) console.log(`Skipping ${skippedCount} already-uploaded icons.`);
-	console.log(`Found ${newJsonFiles.length} new icons to upload.\n`);
+
+	console.log(`   total in img/:  ${jsonFiles.length}`);
+	console.log(`   already done:   ${skippedCount}`);
+	console.log(`   to upload:      ${newJsonFiles.length}`);
+	console.log(`${SEP}\n`);
 
 	if (newJsonFiles.length === 0) {
-		console.log('No new icons to upload. Everything is up to date.');
+		console.log("   Everything is up to date.");
 		process.exit(0);
 	}
 
-	const results = await runWithConcurrency<IconEntry>(
-		newJsonFiles,
-		async (jsonFile) => {
-			const iconId = path.basename(jsonFile, '.json');
-			const jsonPath = path.join(IMG_DIR, jsonFile);
-			const pngPath = path.join(IMG_DIR, `${iconId}.png`);
-
-			if (!fs.existsSync(pngPath)) {
-				console.warn(`   PNG not found for ${iconId}, skipping.`);
-				return null;
-			}
-
-			try {
-				// Small per-task jitter to avoid thundering-herd on startup
-				await sleep(Math.random() * 500);
-				return await processIcon(jsonPath, pngPath);
-			} catch (err) {
-				const msg = err instanceof Error ? err.message : String(err);
-				console.error(`   Error processing ${iconId}: ${msg}`);
-				return null;
-			}
-		},
-		CONCURRENCY,
-		newJsonFiles.length
-	);
-
-	// Brief cooldown after all uploads before writing results
-	await sleep(BATCH_DELAY_MS);
-
-	// Merge new results with existing entries
+	// Retry loop: keep uploading failed icons until all succeed
 	const merged = new Map<string, IconEntry>(existingMap);
-	for (const entry of results) if (entry) merged.set(entry.id, entry);
+	let pendingFiles = [...newJsonFiles];
+	let attemptNum = 0;
+	let totalPreviouslyUploaded = existingMap.size;
 
-	// Preserve any stale entries from the existing file
-	if (fs.existsSync(OUTPUT_JSON)) {
-		const existing = JSON.parse(fs.readFileSync(OUTPUT_JSON, 'utf-8')) as IconEntry[];
-		for (const entry of existing) if (!merged.has(entry.id)) merged.set(entry.id, entry);
+	while (pendingFiles.length > 0) {
+		attemptNum++;
+		const batchLabel =
+			pendingFiles.length === newJsonFiles.length
+				? `uploading ${pendingFiles.length} icons`
+				: `retrying ${pendingFiles.length} failed icons (attempt #${attemptNum})`;
+		console.log(
+			`▶  ${batchLabel} (concurrency=${CONCURRENCY})…\n`,
+		);
+
+		const results = await runWithConcurrency<IconEntry>(
+			pendingFiles,
+			async (jsonFile) => {
+				const iconId = path.basename(jsonFile, ".json");
+				const jsonPath = path.join(IMG_DIR, jsonFile);
+				const pngPath = path.join(IMG_DIR, `${iconId}.png`);
+
+				if (!fs.existsSync(pngPath)) {
+					console.warn(`   ⚠ ${iconId}: PNG missing, skipping`);
+					return null;
+				}
+
+				try {
+					console.log(`   ↑ ${iconId}`);
+					return await processIcon(jsonPath, pngPath);
+				} catch (err) {
+					if (err instanceof AccountLockedError) throw err;
+					const msg = err instanceof Error ? err.message : String(err);
+					console.error(`   ✗ ${iconId}: ${msg}`);
+					return null;
+				}
+			},
+			CONCURRENCY,
+			pendingFiles.length,
+		);
+
+		await sleep(500);
+
+		// Collect failures that are worth retrying (PNG must exist)
+		const retryFiles: string[] = [];
+		let permanentSkips = 0;
+		for (let i = 0; i < results.length; i++) {
+			const entry = results[i];
+			if (entry) {
+				merged.set(entry.id, entry);
+			} else {
+				const jsonFile = pendingFiles[i];
+				const iconId = path.basename(jsonFile, ".json");
+				const retryPngPath = path.join(IMG_DIR, `${iconId}.png`);
+				if (fs.existsSync(retryPngPath)) {
+					retryFiles.push(jsonFile);
+				} else {
+					permanentSkips++;
+				}
+			}
+		}
+
+		// Save progress after each round
+		if (fs.existsSync(OUTPUT_JSON)) {
+			const existing = JSON.parse(
+				fs.readFileSync(OUTPUT_JSON, "utf-8"),
+			) as IconEntry[];
+			for (const entry of existing) {
+				if (!merged.has(entry.id)) merged.set(entry.id, entry);
+			}
+		}
+
+		const roundEntries = [...merged.values()].sort((a, b) =>
+			a.id.localeCompare(b.id),
+		);
+
+		fs.writeFileSync(
+			OUTPUT_JSON,
+			JSON.stringify(roundEntries, null, "\t"),
+			"utf-8",
+		);
+
+		const roundSuccess = results.filter(Boolean).length;
+		const roundFail = retryFiles.length;
+
+		console.log();
+		if (roundFail === 0 && permanentSkips === 0) {
+			console.log(`   ✓ all ${roundSuccess} succeeded this round`);
+		} else {
+			console.log(`   ✓ uploaded  ${roundSuccess}`);
+			if (roundFail > 0) console.log(`   ✗ failed    ${roundFail} — retrying…`);
+			if (permanentSkips > 0)
+				console.log(`   ⊝ skipped   ${permanentSkips} (PNG missing, cannot retry)`);
+		}
+
+		pendingFiles = retryFiles;
+
+		if (pendingFiles.length === 0 && permanentSkips > 0) {
+			console.log(
+				`\n   ⚠ ${permanentSkips} icon(s) could not be uploaded because their PNG files are missing.`,
+			);
+		}
 	}
 
-	const finalEntries = [...merged.values()].sort((a, b) => a.id.localeCompare(b.id));
+	const finalEntries = [...merged.values()].sort((a, b) =>
+		a.id.localeCompare(b.id),
+	);
 
-	fs.writeFileSync(OUTPUT_JSON, JSON.stringify(finalEntries, null, '\t'), 'utf-8');
-	console.log(`\nSaved ${finalEntries.length} icons to ${OUTPUT_JSON}`);
-
-	const successCount = results.filter(Boolean).length;
-	console.log(`${successCount} uploaded, ${newJsonFiles.length - successCount} failed.`);
+	console.log(`\n${SEP}`);
+	const newlyUploaded = finalEntries.length - totalPreviouslyUploaded;
+	console.log(`   ✓ all ${newlyUploaded} icons uploaded successfully`);
+	console.log(
+		`   💾 saved    ${finalEntries.length} icons → ${OUTPUT_JSON}`,
+	);
+	console.log(`${SEP}\n`);
 }
 
-void main();
+void main().catch((err) => {
+	if (err instanceof AccountLockedError) {
+		console.error(`\n${err.message}`);
+	} else {
+		console.error("\nUnexpected error:", err);
+	}
+	process.exit(1);
+});

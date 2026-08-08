@@ -23,7 +23,7 @@ function main() {
 
 	console.log(`📋 Found ${icons.length} icons to generate.\n`);
 
-	// Ensure output directory exists
+
 	fs.mkdirSync(OUTPUT_DIR, { recursive: true });
 
 	let generated = 0;
@@ -32,15 +32,9 @@ function main() {
 		const componentName = icon.title;
 		const iconId = icon.id;
 
-		// Generate the component file
 		const tsxContent = `import React from "@rbxts/react";
 import { IconTemplate, type IconProps } from "../IconTemplate";
 
-/**
- * ${componentName} icon from Lucide.
- * Contributors: ${icon.contributors}
- * Roblox Asset ID: rbxassetid://${icon.assetId}
- */
 export default function ${componentName}(props: Partial<IconProps>): React.Element {
 	return (
 		<IconTemplate
@@ -56,11 +50,9 @@ export default function ${componentName}(props: Partial<IconProps>): React.Eleme
 		generated++;
 	}
 
-	// Generate the barrel index for all icons
 	const barrelExports = icons.map((icon) => `export { default as ${icon.title} } from "./${icon.id}";`).join('\n');
 
-	const barrelContent = `// Auto-generated icon barrel file. Do not edit manually.
-// Generated from src/icon-data.json by scripts/generate-icons.ts
+	const barrelContent = `
 
 ${barrelExports}
 `;
