@@ -672,6 +672,22 @@
 		"libraryId": 112522519971871
 	},
 	{
+		"id": "angle",
+		"title": "Angle",
+		"assetId": 90599084448225,
+		"uri": "rbxassetid://90599084448225",
+		"contributors": "samuelalake",
+		"libraryId": 82963400083641
+	},
+	{
+		"id": "angle-fill",
+		"title": "AngleFill",
+		"assetId": 73555625976907,
+		"uri": "rbxassetid://73555625976907",
+		"contributors": "samuelalake",
+		"libraryId": 89741307544982
+	},
+	{
 		"id": "antenna",
 		"title": "Antenna",
 		"assetId": 125108823155025,
@@ -3798,6 +3814,38 @@
 		"uri": "rbxassetid://87499465585159",
 		"contributors": "rrod497, jamiemlaw, karsa-mistmere",
 		"libraryId": 74799130771930
+	},
+	{
+		"id": "broom",
+		"title": "Broom",
+		"assetId": 78702473787515,
+		"uri": "rbxassetid://78702473787515",
+		"contributors": "danielbayley, karsa-mistmere",
+		"libraryId": 73338031289484
+	},
+	{
+		"id": "broom-fill",
+		"title": "BroomFill",
+		"assetId": 120002662934102,
+		"uri": "rbxassetid://120002662934102",
+		"contributors": "danielbayley, karsa-mistmere",
+		"libraryId": 101295291305935
+	},
+	{
+		"id": "broom-sparkles",
+		"title": "BroomSparkles",
+		"assetId": 139781625696359,
+		"uri": "rbxassetid://139781625696359",
+		"contributors": "danielbayley, karsa-mistmere",
+		"libraryId": 87907598766624
+	},
+	{
+		"id": "broom-sparkles-fill",
+		"title": "BroomSparklesFill",
+		"assetId": 109859576244119,
+		"uri": "rbxassetid://109859576244119",
+		"contributors": "danielbayley, karsa-mistmere",
+		"libraryId": 115599537045233
 	},
 	{
 		"id": "brush",
@@ -15070,6 +15118,22 @@
 		"uri": "rbxassetid://95484230714063",
 		"contributors": "colebemis, karsa-mistmere, ericfennis, jguddas",
 		"libraryId": 93712770204131
+	},
+	{
+		"id": "mail-badge",
+		"title": "MailBadge",
+		"assetId": 133246145327404,
+		"uri": "rbxassetid://133246145327404",
+		"contributors": "rrod497, colebemis, karsa-mistmere, ericfennis, jguddas, danielbayley",
+		"libraryId": 108999910547283
+	},
+	{
+		"id": "mail-badge-fill",
+		"title": "MailBadgeFill",
+		"assetId": 129268436765608,
+		"uri": "rbxassetid://129268436765608",
+		"contributors": "rrod497, colebemis, karsa-mistmere, ericfennis, jguddas, danielbayley",
+		"libraryId": 121291156908243
 	},
 	{
 		"id": "mail-check",
