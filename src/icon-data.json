@@ -4560,6 +4560,22 @@
 		"libraryId": 103813219523471
 	},
 	{
+		"libraryId": 91311319094009,
+		"id": "car-battery",
+		"title": "CarBattery",
+		"assetId": 0,
+		"uri": "",
+		"contributors": "andreynaz4renko"
+	},
+	{
+		"libraryId": 130384472623924,
+		"id": "car-battery-fill",
+		"title": "CarBatteryFill",
+		"assetId": 120182920340445,
+		"uri": "rbxassetid://120182920340445",
+		"contributors": "andreynaz4renko"
+	},
+	{
 		"id": "car-fill",
 		"title": "CarFill",
 		"assetId": 137052985316787,
@@ -9110,6 +9126,22 @@
 		"uri": "rbxassetid://88487316085072",
 		"contributors": "karsa-mistmere, ericfennis, jamiemlaw",
 		"libraryId": 128515345584460
+	},
+	{
+		"libraryId": 105222826981123,
+		"id": "eject",
+		"title": "Eject",
+		"assetId": 115790253480026,
+		"uri": "rbxassetid://115790253480026",
+		"contributors": "BorisDelchambre, ThibautMarechal, karsa-mistmere"
+	},
+	{
+		"libraryId": 137445616142929,
+		"id": "eject-fill",
+		"title": "EjectFill",
+		"assetId": 0,
+		"uri": "",
+		"contributors": "BorisDelchambre, ThibautMarechal, karsa-mistmere"
 	},
 	{
 		"id": "ellipse",
