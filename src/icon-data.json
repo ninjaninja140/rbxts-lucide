@@ -16424,20 +16424,20 @@
 		"libraryId": 80806918394776
 	},
 	{
-		"libraryId": 118286562381925,
 		"id": "midi-port",
 		"title": "MidiPort",
-		"assetId": 0,
-		"uri": "",
-		"contributors": "simoncoudeville, karsa-mistmere"
+		"assetId": 125424298660918,
+		"uri": "rbxassetid://125424298660918",
+		"contributors": "simoncoudeville, karsa-mistmere",
+		"libraryId": 118286562381925
 	},
 	{
-		"libraryId": 85291825326348,
 		"id": "midi-port-fill",
 		"title": "MidiPortFill",
 		"assetId": 102710246090949,
 		"uri": "rbxassetid://102710246090949",
-		"contributors": "simoncoudeville, karsa-mistmere"
+		"contributors": "simoncoudeville, karsa-mistmere",
+		"libraryId": 85291825326348
 	},
 	{
 		"id": "milestone",
